@@ -61,11 +61,15 @@ fi
 
 echo "Diagnostic ready. Connect razr 50 by USB and start Google Maps navigation. Capture runs for ${duration} seconds."
 set +e
-timeout --signal=TERM --kill-after=10s "${duration}s" \
-  runuser -u aa2acp -- env \
-  LD_LIBRARY_PATH="$stage/package/usr/lib/aa2acp" \
-  "$stage/package/usr/bin/aa2acp-media-capture" \
-  "$stage/data/capture" > "$stage/data/receiver.log" 2>&1
+(
+  # Also bound files written by older diagnostic packages without internal caps.
+  ulimit -f 65536
+  timeout --signal=TERM --kill-after=10s "${duration}s" \
+    runuser -u aa2acp -- env \
+    LD_LIBRARY_PATH="$stage/package/usr/lib/aa2acp" \
+    "$stage/package/usr/bin/aa2acp-media-capture" \
+    "$stage/data/capture"
+) > "$stage/data/receiver.log" 2>&1
 capture_status=$?
 set -e
 printf 'capture exit status: %s\n' "$capture_status" > "$stage/data/result.txt"

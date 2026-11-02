@@ -103,6 +103,8 @@ is an **internal media tap**, not a CarPlay/AirPlay protocol emulator, and
 successful decoding does not establish compatibility with a MINI head unit.
 The capture stops with an error if video exceeds 64 MiB, guidance audio exceeds
 16 MiB, or a write fails; inspect `result.txt` before interpreting the files.
+The Pi runner also limits each output file to 64 MiB for older diagnostic
+packages that lack those internal limits.
 
 Run it only after recording the current service state and arranging a rollback:
 the installed daemon and this diagnostic cannot own the same USB phone at once.
