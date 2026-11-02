@@ -193,6 +193,49 @@ For an offline decoder smoke check, generate a two-second H.264 color card and
 16 kHz mono PCM tone with FFmpeg's `color` and `sine` filters, then apply the
 `ffprobe` and `ffmpeg` commands above. This checks the decoder workflow only.
 
+### USB and Android Auto fault isolation
+
+Run these gates in order and change one variable per hardware run. Do not
+interpret the Android Auto screen alone as proof that the USB or projection
+session succeeded.
+
+| Gate | Pass evidence | If it fails, investigate |
+| --- | --- | --- |
+| USB electrical/link | No new over-current, descriptor, or repeated disconnect events while the phone is connected | Pi USB-A port, cable, hub/adapter, phone connector, and Pi power; do not change AA2ACP code yet |
+| AOAP enumeration | One stable `AOAP transport ready` event after connecting | USB stability and phone USB negotiation; an Android Auto item need not appear in the generic USB-purpose menu |
+| Android Auto control | Control/TLS session remains up and service discovery completes without a matching disconnect | Capture the complete sanitized receiver event sequence; investigate AASDK version/authentication and phone-side Android Auto settings |
+| Video channel | Video configured and started, then `video.h264` grows while Maps is projecting | If it starts but stays empty, check whether the phone actually began projection, then instrument the receiver callback and video ACK path |
+| Audio channel | Guidance PCM arrives after an audible navigation prompt and `guidance.s16le` grows | Check phone audio focus/channel negotiation and the receiver audio callback |
+| Decode | `ffprobe` recognizes the stream and FFmpeg decodes frames/audio | H.264 normalization or media framing in AA2ACP |
+| CarPlay output | Decoded media reaches the configured head unit | AirPlay setup, head-unit capabilities, and output routing |
+
+For each run, save only: event type counts and order, video/audio byte counts,
+kernel USB event counts, and decoder results. Redact USB addresses, phone IDs,
+Bluetooth addresses, IP addresses, route imagery, and audio before sharing.
+Error 10 (`USB_TRANSFER`, native 1) is a failed USB transfer; correlate it with
+kernel disconnects before changing code. Error 25 is `SSL_WRITE`; the native
+value 2 is `SSL_ERROR_WANT_READ`, which needs its surrounding control-session
+events and is not by itself proof of a bad certificate. Video-start events
+with zero media bytes mean the channel setup completed but provide no frame to
+decode.
+
+The diagnostic receiver and `aa2acp.service` must never own the phone at the
+same time. For a Cloud-driven run, keep `aa2acp.service` stopped, ensure the
+SSH user has the `aa2acp` group in its current login session, start the
+time-limited capture first, then connect the unlocked phone. Leave the USB
+role at its default; do not force a role switch or wait for an Android Auto
+choice in the generic USB menu. Accept Android Auto prompts, start Maps
+navigation, and request an audible direction. If control disconnects, stop
+that capture and collect the result before retrying. Start the normal service
+again when diagnostic work is complete.
+
+Current razr 50 evidence: AOAP, control discovery, video configuration, and
+video-start events have occurred, but repeated USB disconnects followed the
+handshake and media files remained empty. A later kernel sample showed no
+over-current but repeated disconnects on the same USB path. This points first
+to USB link stability; it does not yet prove an Android Auto UI setting or an
+H.264 decoder defect.
+
 ## Regression cases
 
 Before considering a transport or lifecycle change complete, test:
