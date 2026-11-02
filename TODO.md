@@ -68,7 +68,24 @@
 - [ ] Support MFi authentication protocol major 3, including its 32-byte
   challenge and SHA-256 signature-verification path while retaining the
   verified 20-byte SHA-1 major-2 path.
-- [ ] Add wireless Android Auto with a dedicated second Wi-Fi radio.
+- [ ] Add wireless Android Auto with a dedicated second Wi-Fi radio. Keep the
+  existing USB receiver available and feed both transports into one Android
+  Auto session interface; allow only one active phone session at a time.
+  Reserve the current Wi-Fi radio for the management hotspot and CarPlay
+  handoff. Bind wireless Android Auto to an explicitly selected second radio,
+  and fail setup if that radio is absent or is the CarPlay radio. Preserve
+  Ethernet management access during every handoff.
+  - [ ] Implement and test discovery, pairing, Wi-Fi association, transport
+    negotiation, reconnect, and timeout handling without a phone or Pi.
+    Include USB arrival during wireless startup, wireless arrival during USB
+    projection, disconnect, and daemon restart. Never switch an active
+    projection session to another transport implicitly.
+  - [ ] Keep wireless pairing credentials in the OS credential store with
+    restrictive permissions; keep credentials and device identifiers out of
+    logs and test fixtures.
+  - [ ] Verify the wireless path with a real phone separately from synthetic
+    transport and media tests, and record which milestones are hardware
+    verified in TESTING.md.
 - [ ] Package the daemon as a minimal Raspberry Pi image with ignition/power
   handling and persistent state.
 

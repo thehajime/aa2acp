@@ -204,6 +204,12 @@ add_executable(aa2acp-android-auto-usb src/android_auto_usb_main.cpp)
 target_link_libraries(aa2acp-android-auto-usb PRIVATE android_auto_usb)
 target_compile_options(aa2acp-android-auto-usb PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
+add_executable(aa2acp-media-capture src/android_auto_media_capture_main.cpp)
+target_link_libraries(aa2acp-media-capture PRIVATE android_auto_usb h264_normalizer)
+set_property(TARGET aa2acp-media-capture PROPERTY INSTALL_RPATH
+             "$ORIGIN/../lib/aa2acp")
+target_compile_options(aa2acp-media-capture PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
 include(CTest)
 if(BUILD_TESTING)
   # Keep assert() active in test code even in Release builds (which define
@@ -253,6 +259,7 @@ endif()
 option(AA2ACP_INSTALL_SYSTEMD "Install systemd units with the package" ON)
 
 install(TARGETS aa2acp RUNTIME DESTINATION bin)
+install(TARGETS aa2acp-media-capture RUNTIME DESTINATION bin)
 install(FILES assets/display-preflight.h264 DESTINATION share/aa2acp)
 # Directory install so the full soname chain (libX.so -> .so.N) ships;
 # install(FILES) would copy only dangling symlinks.
