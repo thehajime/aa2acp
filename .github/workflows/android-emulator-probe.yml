@@ -1,0 +1,42 @@
+name: Android emulator feasibility
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix-aauto]
+    paths:
+      - ".github/workflows/android-emulator-probe.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  emulator-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Start a Play Store Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_playstore
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: >-
+            -no-window -no-audio -no-boot-anim -camera-back none
+            -camera-front none
+          script: |
+            set -eu
+            sdk=$(adb shell getprop ro.build.version.sdk | tr -d '\r')
+            play_store=$(adb shell pm path com.android.vending 2>/dev/null | head -1 | tr -d '\r' || true)
+            echo "Android API: ${sdk}"
+            echo "Google Play package: ${play_store:-missing}"
+            aa_path=$(adb shell pm path com.google.android.projection.gearhead 2>/dev/null | head -1 | tr -d '\r' || true)
+            if [ -n "$aa_path" ]; then
+              echo "Android Auto package: ${aa_path}"
+            else
+              echo "Android Auto package: missing"
+            fi
+            adb forward tcp:5277 tcp:5277
+            adb forward --list
