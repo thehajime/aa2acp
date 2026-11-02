@@ -63,7 +63,7 @@ echo "Diagnostic ready. Connect razr 50 by USB and start Google Maps navigation.
 set +e
 (
   # Also bound files written by older diagnostic packages without internal caps.
-  ulimit -f 65536
+  ulimit -f 65536 || exit 1
   timeout --signal=TERM --kill-after=10s "${duration}s" \
     runuser -u aa2acp -- env \
     LD_LIBRARY_PATH="$stage/package/usr/lib/aa2acp" \
